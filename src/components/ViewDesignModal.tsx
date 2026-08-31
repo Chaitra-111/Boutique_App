@@ -45,8 +45,8 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
     const ownerPhoneDigits = getOwnerPhone().replace(/\D/g, "");
 
     const message = isAdmin
-      ? `✨ *Hello from Aruna Creations!* ✨\n\nHere are the details for our exclusive boutique design:\n👗 *Design Name:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Designer Tailored Pattern"}\n📝 *Details:* ${design.details || "Custom high-quality handcrafting"}\n\n🌟 *These are our designs!* For more designs, full photos & customization, check our boutique catalog link below:\n👉 ${customerLink}\n\nFeel free to share this with your friends & family or reply to place your order! ✨`
-      : `✨ *Hello Aruna Creations!* ✨\n\nI am viewing your design on the catalog (*Model:* ${design.modelNumber} - ${design.name}) and want to know price, fabric details, and stitching options! 👗\n\n👉 *Design Link:* ${customerLink}`;
+      ? `✨ *Hello from Aruna Creations!* ✨\n\nHere are the details for our exclusive boutique design:\n👗 *Design Name:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Designer Tailored Pattern"}\n📝 *Details:* ${design.details || "Custom high-quality handcrafting"}\n\n🌟 *These are our designs!* For more designs, full photos & customization, check our boutique catalog link below:\n👉 ${customerLink}\n\n_(Please wait a few moments if the website is loading)_\n\nFeel free to share this with your friends & family or reply to place your order! ✨`
+      : `✨ *Hello Aruna Creations!* ✨\n\nI am viewing your design on the catalog (*Model:* ${design.modelNumber} - ${design.name}) and want to know price, fabric details, and stitching options! 👗\n\n👉 *Design Link:* ${customerLink}\n\n_(Please wait a few moments if the website is loading)_`;
 
     const url = isAdmin
       ? `https://wa.me/?text=${encodeURIComponent(message)}`
