@@ -11,6 +11,7 @@ import { AddExtraAmountModal } from "@/components/AddExtraAmountModal";
 import { ViewDesignModal } from "@/components/ViewDesignModal";
 import { DraftsModal } from "@/components/DraftsModal";
 import { LoginView } from "@/components/LoginView";
+import { InstallPwaPrompt } from "@/components/InstallPwaPrompt";
 import { OrderData, DesignData, CustomerData } from "@/types";
 import { Plus, Search, Scissors, PhoneCall, RefreshCw, Sparkles } from "lucide-react";
 
@@ -134,6 +135,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] pb-24 font-sans text-stone-800">
+      {/* Install PWA Prompt */}
+      <InstallPwaPrompt />
+
       {/* Navbar with brand, draft icon, and tabs */}
       <Navbar
         activeTab={activeTab}
