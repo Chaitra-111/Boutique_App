@@ -4,6 +4,9 @@ import { Customer } from "@/models/Customer";
 import { Order } from "@/models/Order";
 import { memoryDB } from "@/lib/memoryStorage";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await connectDB();

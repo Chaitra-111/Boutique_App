@@ -57,7 +57,7 @@ export default function CustomerPortalClient() {
   useEffect(() => {
     const fetchDesigns = async () => {
       try {
-        const res = await fetch("/api/designs");
+        const res = await fetch("/api/designs", { cache: "no-store" });
         const data = await res.json();
         if (data.designs) {
           setDesigns(data.designs);

@@ -62,9 +62,9 @@ export default function HomePage() {
       await fetch("/api/seed").catch(() => {});
 
       const [resOrders, resDesigns, resCustomers] = await Promise.all([
-        fetch("/api/orders"),
-        fetch("/api/designs"),
-        fetch("/api/customers"),
+        fetch("/api/orders", { cache: "no-store" }),
+        fetch("/api/designs", { cache: "no-store" }),
+        fetch("/api/customers", { cache: "no-store" }),
       ]);
 
       const dataOrders = await resOrders.json();
