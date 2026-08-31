@@ -58,7 +58,7 @@ export default function CustomerPortalClient() {
   if (!customer) {
     return (
       <LoginView
-        defaultRole="customer"
+        role="customer"
         onLoginSuccess={(u) => {
           setCustomer({ name: u.name, phone: u.phone });
         }}
@@ -140,16 +140,28 @@ export default function CustomerPortalClient() {
         </div>
 
         {/* Designs Catalog (No internal prices shown to customer, strictly as per wireframe and requirements) */}
-        <div className="grid grid-cols-2 gap-3">
-          {filteredDesigns.map((design, idx) => (
-            <DesignCard
-              key={design._id || design.id || idx}
-              design={design}
-              isAdmin={false}
-              onViewMore={(d) => setSelectedDesign(d)}
-            />
-          ))}
-        </div>
+        {filteredDesigns.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 text-center border border-rose-100/80 shadow-xs space-y-2">
+            <div className="w-12 h-12 mx-auto rounded-full bg-rose-50 text-[#d9778a] flex items-center justify-center">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-bold text-stone-700">New Collection Coming Soon</h3>
+            <p className="text-xs text-stone-500">
+              Our master designers are currently uploading our latest bridal embroidery and bespoke patterns.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filteredDesigns.map((design, idx) => (
+              <DesignCard
+                key={design._id || design.id || idx}
+                design={design}
+                isAdmin={false}
+                onViewMore={(d) => setSelectedDesign(d)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Floating Bottom Action Buttons for Customer (WhatsApp & Contact) */}

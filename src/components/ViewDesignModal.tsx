@@ -46,7 +46,8 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
 
   const handleInterestedClick = async () => {
     const storedCustomerName = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_name") || "Interested Client" : "Interested Client";
-    const storedCustomerPhone = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_phone") || "Customer Portal Visitor" : "Customer Portal Visitor";
+    const storedCustomerPhone = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_phone") || "" : "";
+    const customerLink = getShareLink();
 
     setIsSubmitting(true);
     try {
@@ -55,7 +56,7 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName: storedCustomerName,
-          customerPhone: storedCustomerPhone,
+          customerPhone: storedCustomerPhone || "Online Client",
           designId: design._id || design.id,
           designModel: design.modelNumber,
           designName: design.name,
@@ -64,6 +65,12 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
       });
 
       setInterestedSent(true);
+
+      // Trigger WhatsApp message to the Boutique Owner
+      const msg = `✨ *New Customer Design Inquiry!* ✨\n\n*Client Name:* ${storedCustomerName}\n*Client Phone:* ${storedCustomerPhone || "Direct WhatsApp Contact"}\n\n👗 *Design of Interest:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard"}\n\n👉 *View Design in Catalog:* ${customerLink}\n\nHi Aruna Creations! I am very interested in this design and want to discuss customization and stitching! 💕`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+
       setTimeout(() => setInterestedSent(false), 3500);
     } catch (e) {
       console.error(e);

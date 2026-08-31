@@ -15,24 +15,11 @@ export async function GET(request: Request) {
     }
 
     const designs = await Design.find(query).sort({ createdAt: -1 });
-    if (!designs || designs.length === 0) {
-      // Return initial designs if database is empty
-      const filtered = type && type !== "all" 
-        ? INITIAL_DESIGNS.filter(d => d.type === type) 
-        : INITIAL_DESIGNS;
-      return NextResponse.json({ designs: filtered, isMock: true });
-    }
-
-    return NextResponse.json({ designs, isMock: false });
+    return NextResponse.json({ designs: designs || [], isMock: false });
   } catch (error: unknown) {
     const err = error as Error;
-    console.warn("Falling back to static designs:", err.message);
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type");
-    const filtered = type && type !== "all" 
-      ? INITIAL_DESIGNS.filter(d => d.type === type) 
-      : INITIAL_DESIGNS;
-    return NextResponse.json({ designs: filtered, isMock: true });
+    console.warn("Designs fetch error:", err.message);
+    return NextResponse.json({ designs: [] });
   }
 }
 

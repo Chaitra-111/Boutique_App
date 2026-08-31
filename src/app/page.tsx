@@ -12,7 +12,7 @@ import { ViewDesignModal } from "@/components/ViewDesignModal";
 import { DraftsModal } from "@/components/DraftsModal";
 import { LoginView } from "@/components/LoginView";
 import { OrderData, DesignData, CustomerData } from "@/types";
-import { Plus, Search, Scissors, PhoneCall, RefreshCw } from "lucide-react";
+import { Plus, Search, Scissors, PhoneCall, RefreshCw, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const [user, setUser] = useState<{ name: string; phone: string; role: "admin" | "customer" } | null>(null);
@@ -112,11 +112,9 @@ export default function HomePage() {
   if (!user) {
     return (
       <LoginView
+        role="admin"
         onLoginSuccess={(u) => {
           setUser(u);
-          if (u.role === "customer") {
-            window.location.href = "/c";
-          }
         }}
       />
     );
@@ -247,21 +245,43 @@ export default function HomePage() {
             </div>
 
             {/* Designs Grid (2 Columns on mobile as sketched) */}
-            <div className="grid grid-cols-2 gap-3">
-              {filteredDesigns.map((design, idx) => (
-                <DesignCard
-                  key={design._id || design.id || idx}
-                  design={design}
-                  isAdmin={true}
-                  onViewMore={(d) => setSelectedViewDesign(d)}
-                  onEdit={(d) => {
-                    setEditingDesign(d);
+            {filteredDesigns.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 text-center border border-rose-100/80 shadow-xs space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-full bg-rose-50 text-[#d9778a] flex items-center justify-center">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-stone-700">No designs added yet</h3>
+                <p className="text-xs text-stone-500">
+                  Upload your boutique embroidery patterns, stitching models & bridal styles from your device.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingDesign(null);
                     setIsAddDesignOpen(true);
                   }}
-                  onDelete={handleDeleteDesign}
-                />
-              ))}
-            </div>
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#d9778a] text-white text-xs font-bold shadow-md shadow-rose-200 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> Add First Design
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {filteredDesigns.map((design, idx) => (
+                  <DesignCard
+                    key={design._id || design.id || idx}
+                    design={design}
+                    isAdmin={true}
+                    onViewMore={(d) => setSelectedViewDesign(d)}
+                    onEdit={(d) => {
+                      setEditingDesign(d);
+                      setIsAddDesignOpen(true);
+                    }}
+                    onDelete={handleDeleteDesign}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 

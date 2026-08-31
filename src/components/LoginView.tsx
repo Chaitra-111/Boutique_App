@@ -5,14 +5,13 @@ import { Scissors, Phone, User, ArrowRight, Sparkles } from "lucide-react";
 
 interface LoginViewProps {
   onLoginSuccess: (user: { name: string; phone: string; role: "admin" | "customer" }) => void;
-  defaultRole?: "admin" | "customer";
+  role: "admin" | "customer";
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
-  defaultRole = "admin",
+  role = "admin",
 }) => {
-  const [role, setRole] = useState<"admin" | "customer">(defaultRole);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
@@ -37,49 +36,28 @@ export const LoginView: React.FC<LoginViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#faf7f2] flex flex-col justify-center items-center p-4">
-      {/* Container simulating mobile-first card */}
-      <div className="w-full max-w-sm bg-white rounded-3xl border border-rose-100/90 shadow-xl overflow-hidden p-6 space-y-6">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-center items-center p-4">
+      {/* Mobile-first login container */}
+      <div className="w-full max-w-sm bg-white rounded-3xl border border-rose-100/90 shadow-xl overflow-hidden p-6 space-y-5">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1.5">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100/80 text-[#d9778a] flex items-center justify-center shadow-inner">
             <Scissors className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-extrabold text-stone-800 tracking-tight">
             Aruna Creations
           </h1>
+          <div className="inline-block px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-[11px] font-bold text-[#d9778a]">
+            {role === "admin" ? "🔐 Boutique Owner Login" : "✨ Customer Catalog Access"}
+          </div>
           <p className="text-xs text-stone-500 font-medium">
-            Boutique & Designer Bridal Studio
+            {role === "admin"
+              ? "Sign in to manage orders, catalog & client requests"
+              : "Enter your details to explore designer patterns & collections"}
           </p>
         </div>
 
-        {/* Role Segment Toggle */}
-        <div className="grid grid-cols-2 p-1 bg-stone-100 rounded-2xl text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setRole("admin")}
-            className={`py-2 rounded-xl transition-all ${
-              role === "admin"
-                ? "bg-white text-[#d9778a] shadow-xs"
-                : "text-stone-500 hover:text-stone-800"
-            }`}
-          >
-            Boutique Owner
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("customer")}
-            className={`py-2 rounded-xl transition-all ${
-              role === "customer"
-                ? "bg-white text-[#d9778a] shadow-xs"
-                : "text-stone-500 hover:text-stone-800"
-            }`}
-          >
-            Customer Portal
-          </button>
-        </div>
-
-        {/* Form (Name, Phone, Login Button as wireframed) */}
+        {/* Form (Name, Phone, Login Button) */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -92,7 +70,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={role === "admin" ? "Enter owner name (e.g. Aruna)" : "Enter your full name"}
                 className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl border border-stone-200 focus:outline-hidden focus:border-[#d9778a] bg-stone-50/50"
               />
             </div>
@@ -115,17 +93,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
             <p className="text-[10px] text-stone-400 mt-1">
               {role === "admin"
-                ? "Used for order updates and customer communication records."
-                : "Used to connect you directly with Aruna Creations boutique."}
+                ? "Used for boutique admin session authentication."
+                : "Used to connect you directly with Aruna Creations on WhatsApp."}
             </p>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-2xl bg-[#d9778a] hover:bg-[#c45d72] text-white text-xs font-bold shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 group"
+            className="w-full py-3 rounded-2xl bg-[#d9778a] hover:bg-[#c45d72] text-white text-xs font-bold shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 group cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Login as {role === "admin" ? "Boutique Owner" : "Customer"}</span>
+            <span>{role === "admin" ? "Login to Boutique Dashboard" : "Enter Customer Catalog"}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </form>
@@ -144,7 +122,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 setPhone("9876543210");
               }
             }}
-            className="text-[#d9778a] hover:underline font-medium"
+            className="text-[#d9778a] hover:underline font-medium cursor-pointer"
           >
             {role === "admin" ? "Owner Demo" : "Customer Demo"}
           </button>
