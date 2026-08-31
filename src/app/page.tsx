@@ -57,6 +57,21 @@ export default function HomePage() {
   }, []);
 
   const fetchData = useCallback(async () => {
+    // 1. Immediately hydrate from local cache so screen never blinks or shows empty state
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("aruna_saved_designs_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDesigns(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     setLoading(true);
     try {
       // Seed if necessary
@@ -73,7 +88,11 @@ export default function HomePage() {
       const dataCustomers = await resCustomers.json();
 
       if (dataOrders.orders) setOrders(dataOrders.orders);
-      if (dataDesigns.designs) setDesigns(dataDesigns.designs);
+      if (dataDesigns.designs && Array.isArray(dataDesigns.designs)) {
+        setDesigns(dataDesigns.designs);
+        // Persist designs cache in local storage
+        localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(dataDesigns.designs));
+      }
       if (dataCustomers.customers) setCustomers(dataCustomers.customers);
     } catch (e) {
       console.error("Fetch data error:", e);

@@ -56,12 +56,28 @@ export default function CustomerPortalClient() {
 
   // Fetch designs
   useEffect(() => {
+    // 1. Instant hydration from cached designs
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("aruna_saved_designs_cache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDesigns(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     const fetchDesigns = async () => {
       try {
         const res = await fetch("/api/designs", { cache: "no-store" });
         const data = await res.json();
-        if (data.designs) {
+        if (data.designs && Array.isArray(data.designs)) {
           setDesigns(data.designs);
+          localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(data.designs));
 
           // If URL contains ?design=AC-EMB-101, open it immediately
           if (requestedDesignModel) {
