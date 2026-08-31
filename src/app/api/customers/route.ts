@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Customer } from "@/models/Customer";
 import { Order } from "@/models/Order";
+import { memoryDB } from "@/lib/memoryStorage";
 
 export async function GET() {
   try {
@@ -33,7 +34,7 @@ export async function GET() {
     return NextResponse.json({ customers: customerSummary });
   } catch (error: unknown) {
     const err = error as Error;
-    console.warn("Error getting customer stats:", err.message);
-    return NextResponse.json({ customers: [] });
+    console.warn("MongoDB offline, serving customers from memory store:", err.message);
+    return NextResponse.json({ customers: memoryDB.customers || [] });
   }
 }
