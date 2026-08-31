@@ -129,13 +129,37 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Convert file to base64 data URL for easy offline storage & display
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target?.result) {
-          setImages((prev) => [...prev, event.target!.result as string]);
-        }
+        const img = new Image();
+        img.onload = () => {
+          // Resize large phone camera images to max 1200px width/height and quality 0.8
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL("image/jpeg", 0.82);
+            setImages((prev) => [...prev, compressed]);
+          } else {
+            setImages((prev) => [...prev, event.target!.result as string]);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     });
@@ -175,7 +199,10 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
         body: JSON.stringify(editDesign ? { ...payload, id: editDesign._id || editDesign.id } : payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save design");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save design");
+      }
 
       // Clear draft on success
       if (!editDesign) {

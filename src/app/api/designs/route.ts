@@ -33,9 +33,20 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
+    const cleanModel = modelNumber.trim().toUpperCase();
+
+    // Check if model number already exists
+    const existing = await Design.findOne({ modelNumber: cleanModel });
+    if (existing) {
+      return NextResponse.json(
+        { error: `Design with Model Number "${cleanModel}" already exists. Please use a unique model number.` },
+        { status: 400 }
+      );
+    }
+
     const newDesign = await Design.create({
-      name,
-      modelNumber: modelNumber.toUpperCase(),
+      name: name.trim(),
+      modelNumber: cleanModel,
       type: type || "embroidery",
       customType: customType || "",
       pattern: pattern || "",
@@ -47,6 +58,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ design: newDesign, success: true }, { status: 201 });
   } catch (error: unknown) {
     const err = error as Error;
+    console.error("Design create error:", err);
     return NextResponse.json({ error: err.message || "Failed to create design" }, { status: 500 });
   }
 }
