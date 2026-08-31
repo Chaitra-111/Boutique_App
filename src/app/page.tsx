@@ -393,10 +393,24 @@ export default function HomePage() {
           setDesignDraftToRestore(null);
           checkDraftsStatus();
         }}
-        onSuccess={() => {
-          fetchData();
+        onSuccess={(savedDesign) => {
+          if (savedDesign) {
+            setDesigns((prev) => {
+              const targetId = savedDesign._id || savedDesign.id;
+              const idx = prev.findIndex((d) => (d._id || d.id) === targetId);
+              if (idx !== -1) {
+                const updated = [...prev];
+                updated[idx] = savedDesign;
+                return updated;
+              }
+              return [savedDesign, ...prev];
+            });
+          }
+          // Automatically switch to Design tab so owner immediately sees their newly added design
+          setActiveTab("design");
           setEditingDesign(null);
           setDesignDraftToRestore(null);
+          fetchData();
           checkDraftsStatus();
         }}
       />

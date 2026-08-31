@@ -7,7 +7,7 @@ import { X, ImagePlus, Sparkles, Trash2, Check, CloudUpload } from "lucide-react
 interface AddDesignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (savedDesign?: DesignData) => void;
   editDesign?: DesignData | null;
   initialDraftData?: Record<string, unknown> | null;
 }
@@ -221,7 +221,11 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
         fetch("/api/drafts?type=design", { method: "DELETE" }).catch(() => {});
       }
 
-      onSuccess();
+      if (data.design) {
+        onSuccess(data.design);
+      } else {
+        onSuccess();
+      }
       onClose();
     } catch (err: unknown) {
       const error = err as Error;
