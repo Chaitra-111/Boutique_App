@@ -23,7 +23,8 @@ export const DesignCard: React.FC<DesignCardProps> = ({
 
   const getShareLink = () => {
     if (typeof window === "undefined") return "";
-    return `${window.location.origin}/c?design=${encodeURIComponent(design.modelNumber)}`;
+    const ownerPhone = localStorage.getItem("aruna_user_phone") || "9876543210";
+    return `${window.location.origin}/c?design=${encodeURIComponent(design.modelNumber)}&owner=${encodeURIComponent(ownerPhone)}`;
   };
 
   const handleShareWhatsApp = (e: React.MouseEvent) => {

@@ -31,16 +31,27 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
 
   const getShareLink = () => {
     if (typeof window === "undefined") return "";
-    return `${window.location.origin}/c?design=${encodeURIComponent(design.modelNumber)}`;
+    const ownerPhone = localStorage.getItem("aruna_user_phone") || localStorage.getItem("aruna_owner_phone") || "9876543210";
+    return `${window.location.origin}/c?design=${encodeURIComponent(design.modelNumber)}&owner=${encodeURIComponent(ownerPhone)}`;
+  };
+
+  const getOwnerPhone = () => {
+    if (typeof window === "undefined") return "9876543210";
+    return localStorage.getItem("aruna_owner_phone") || localStorage.getItem("aruna_user_phone") || "9876543210";
   };
 
   const handleWhatsAppShare = () => {
     const customerLink = getShareLink();
+    const ownerPhoneDigits = getOwnerPhone().replace(/\D/g, "");
+
     const message = isAdmin
       ? `✨ *Hello from Aruna Creations!* ✨\n\nHere are the details for our exclusive boutique design:\n👗 *Design Name:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Designer Tailored Pattern"}\n📝 *Details:* ${design.details || "Custom high-quality handcrafting"}\n\n🌟 *These are our designs!* For more designs, full photos & customization, check our boutique catalog link below:\n👉 ${customerLink}\n\nFeel free to share this with your friends & family or reply to place your order! ✨`
-      : `✨ *Aruna Creations - Designer Pattern Inquiry & Sharing* ✨\n\n👗 *Design Name:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard Pattern"}\n\n🌟 *View full details of this design and explore more designs on the boutique link below:*\n👉 ${customerLink}\n\nHi Aruna Creations! I want to know more details & customization options for this design. 💕`;
+      : `✨ *Hello Aruna Creations!* ✨\n\nI am viewing your design on the catalog (*Model:* ${design.modelNumber} - ${design.name}) and want to know price, fabric details, and stitching options! 👗\n\n👉 *Design Link:* ${customerLink}`;
 
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const url = isAdmin
+      ? `https://wa.me/?text=${encodeURIComponent(message)}`
+      : `https://wa.me/91${ownerPhoneDigits}?text=${encodeURIComponent(message)}`;
+
     window.open(url, "_blank");
   };
 
@@ -48,6 +59,7 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
     const storedCustomerName = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_name") || "Interested Client" : "Interested Client";
     const storedCustomerPhone = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_phone") || "" : "";
     const customerLink = getShareLink();
+    const ownerPhoneDigits = getOwnerPhone().replace(/\D/g, "");
 
     setIsSubmitting(true);
     try {
@@ -66,9 +78,9 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
 
       setInterestedSent(true);
 
-      // Trigger WhatsApp message to the Boutique Owner
-      const msg = `✨ *New Customer Design Inquiry!* ✨\n\n*Client Name:* ${storedCustomerName}\n*Client Phone:* ${storedCustomerPhone || "Direct WhatsApp Contact"}\n\n👗 *Design of Interest:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard"}\n\n👉 *View Design in Catalog:* ${customerLink}\n\nHi Aruna Creations! I am very interested in this design and want to discuss customization and stitching! 💕`;
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      // Trigger WhatsApp message directly to the Boutique Owner's Phone Number
+      const msg = `✨ *Hello Aruna Creations!* ✨\n\nI am very *INTERESTED* in this design from your catalog:\n👗 *Design:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard Pattern"}\n\n👤 *My Details:*\n*Name:* ${storedCustomerName}\n*Phone:* ${storedCustomerPhone || "Direct WhatsApp Contact"}\n\n👉 *View Design:* ${customerLink}\n\nPlease share price, fabric details, and stitching availability! 💕`;
+      const waUrl = `https://wa.me/91${ownerPhoneDigits}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, "_blank");
 
       setTimeout(() => setInterestedSent(false), 3500);

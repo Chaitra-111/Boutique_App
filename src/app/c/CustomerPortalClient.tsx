@@ -13,11 +13,20 @@ export default function CustomerPortalClient() {
   const searchParams = useSearchParams();
   const requestedDesignModel = searchParams.get("design");
 
+  const requestedOwnerPhone = searchParams.get("owner");
+
   const [customer, setCustomer] = useState<{ name: string; phone: string } | null>(null);
   const [designs, setDesigns] = useState<DesignData[]>([]);
   const [selectedDesign, setSelectedDesign] = useState<DesignData | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Store owner phone from incoming WhatsApp link if present
+  useEffect(() => {
+    if (requestedOwnerPhone) {
+      localStorage.setItem("aruna_owner_phone", requestedOwnerPhone);
+    }
+  }, [requestedOwnerPhone]);
 
   // Check client customer session
   useEffect(() => {
