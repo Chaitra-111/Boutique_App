@@ -26,6 +26,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
       localStorage.setItem("aruna_user_name", name.trim());
       localStorage.setItem("aruna_user_phone", phone.trim());
       localStorage.setItem("aruna_role", "admin");
+
+      // Sync active owner contact to server so customer portal always has it
+      fetch("/api/owner-contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+      }).catch(() => {});
     } else {
       localStorage.setItem("aruna_customer_name", name.trim());
       localStorage.setItem("aruna_customer_phone", phone.trim());

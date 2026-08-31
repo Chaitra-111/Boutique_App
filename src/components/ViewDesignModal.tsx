@@ -55,40 +55,32 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
     window.open(url, "_blank");
   };
 
-  const handleInterestedClick = async () => {
+  const handleInterestedClick = () => {
     const storedCustomerName = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_name") || "Interested Client" : "Interested Client";
     const storedCustomerPhone = typeof window !== "undefined" ? localStorage.getItem("aruna_customer_phone") || "" : "";
     const customerLink = getShareLink();
     const ownerPhoneDigits = getOwnerPhone().replace(/\D/g, "");
 
-    setIsSubmitting(true);
-    try {
-      await fetch("/api/enquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: storedCustomerName,
-          customerPhone: storedCustomerPhone || "Online Client",
-          designId: design._id || design.id,
-          designModel: design.modelNumber,
-          designName: design.name,
-          message: `Customer showed interest in ${design.modelNumber} - ${design.name}`,
-        }),
-      });
+    // Pre-formatted inquiry message
+    const msg = `✨ *Hello Aruna Creations!* ✨\n\nI am very *INTERESTED* in this design from your catalog:\n👗 *Design:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard Pattern"}\n\n👤 *My Details:*\n*Name:* ${storedCustomerName}\n*Phone:* ${storedCustomerPhone || "Direct WhatsApp Contact"}\n\n👉 *View Design:* ${customerLink}\n\nPlease share price, fabric details, and stitching availability! 💕`;
+    
+    // Redirect instantly to WhatsApp (same behavior as WhatsApp button)
+    const waUrl = `https://wa.me/91${ownerPhoneDigits}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, "_blank");
 
-      setInterestedSent(true);
-
-      // Trigger WhatsApp message directly to the Boutique Owner's Phone Number
-      const msg = `✨ *Hello Aruna Creations!* ✨\n\nI am very *INTERESTED* in this design from your catalog:\n👗 *Design:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Standard Pattern"}\n\n👤 *My Details:*\n*Name:* ${storedCustomerName}\n*Phone:* ${storedCustomerPhone || "Direct WhatsApp Contact"}\n\n👉 *View Design:* ${customerLink}\n\nPlease share price, fabric details, and stitching availability! 💕`;
-      const waUrl = `https://wa.me/91${ownerPhoneDigits}?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, "_blank");
-
-      setTimeout(() => setInterestedSent(false), 3500);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Save lead in background without blocking user
+    fetch("/api/enquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: storedCustomerName,
+        customerPhone: storedCustomerPhone || "Online Client",
+        designId: design._id || design.id,
+        designModel: design.modelNumber,
+        designName: design.name,
+        message: `Customer showed interest in ${design.modelNumber} - ${design.name}`,
+      }),
+    }).catch((e) => console.warn(e));
   };
 
   return (

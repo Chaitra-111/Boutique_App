@@ -12,19 +12,35 @@ import { MessageCircle, Phone, Search, Sparkles } from "lucide-react";
 export default function CustomerPortalClient() {
   const searchParams = useSearchParams();
   const requestedDesignModel = searchParams.get("design");
-
   const requestedOwnerPhone = searchParams.get("owner");
 
   const [customer, setCustomer] = useState<{ name: string; phone: string } | null>(null);
+  const [ownerPhone, setOwnerPhone] = useState<string>("9876543210");
   const [designs, setDesigns] = useState<DesignData[]>([]);
   const [selectedDesign, setSelectedDesign] = useState<DesignData | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Store owner phone from incoming WhatsApp link if present
+  // Store owner phone from incoming WhatsApp link if present, or fetch from server
   useEffect(() => {
     if (requestedOwnerPhone) {
       localStorage.setItem("aruna_owner_phone", requestedOwnerPhone);
+      setOwnerPhone(requestedOwnerPhone);
+    } else {
+      const stored = localStorage.getItem("aruna_owner_phone") || localStorage.getItem("aruna_user_phone");
+      if (stored) {
+        setOwnerPhone(stored);
+      } else {
+        fetch("/api/owner-contact")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.owner?.phone) {
+              setOwnerPhone(data.owner.phone);
+              localStorage.setItem("aruna_owner_phone", data.owner.phone);
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [requestedOwnerPhone]);
 
@@ -179,18 +195,19 @@ export default function CustomerPortalClient() {
           type="button"
           onClick={() => {
             const customerLink = typeof window !== "undefined" ? `${window.location.origin}/c` : "";
+            const cleanDigits = (ownerPhone || "9876543210").replace(/\D/g, "");
             const msg = `✨ *Hello Aruna Creations!* ✨\n\nI am browsing your online boutique collection at ${customerLink}.\nI want to discuss customization and stitching for an outfit! 👗`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+            window.open(`https://wa.me/91${cleanDigits}?text=${encodeURIComponent(msg)}`, "_blank");
           }}
-          className="flex-1 py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+          className="flex-1 py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
         >
           <MessageCircle className="w-4 h-4" />
           <span>WhatsApp Boutique</span>
         </button>
 
         <a
-          href="tel:9876543210"
-          className="flex-1 py-3 px-3 rounded-2xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold shadow-lg shadow-stone-400 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+          href={`tel:${(ownerPhone || "9876543210").replace(/\D/g, "")}`}
+          className="flex-1 py-3 px-3 rounded-2xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold shadow-lg shadow-stone-400 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
         >
           <Phone className="w-4 h-4" />
           <span>Call Boutique</span>
