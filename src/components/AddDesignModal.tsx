@@ -125,20 +125,26 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
     setImageUrlInput("");
   };
 
+  const [isCompressing, setIsCompressing] = useState(false);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    setIsCompressing(true);
+    let processed = 0;
+    const total = files.length;
 
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // Resize large phone camera images to max 1200px width/height and quality 0.8
+          // Optimized thumbnail & upload resolution (max 900px, 0.78 quality - ultra fast)
           const canvas = document.createElement("canvas");
           let width = img.width;
           let height = img.height;
-          const maxDim = 1200;
+          const maxDim = 900;
 
           if (width > height && width > maxDim) {
             height = Math.round((height * maxDim) / width);
@@ -153,10 +159,15 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            const compressed = canvas.toDataURL("image/jpeg", 0.82);
+            const compressed = canvas.toDataURL("image/jpeg", 0.78);
             setImages((prev) => [...prev, compressed]);
           } else {
             setImages((prev) => [...prev, event.target!.result as string]);
+          }
+
+          processed++;
+          if (processed >= total) {
+            setIsCompressing(false);
           }
         };
         img.src = event.target?.result as string;
@@ -295,8 +306,17 @@ export const AddDesignModal: React.FC<AddDesignModalProps> = ({
 
               {/* Upload Trigger Tile */}
               <label className="aspect-square rounded-xl border-2 border-dashed border-rose-200 hover:border-[#d9778a] bg-rose-50/40 flex flex-col items-center justify-center text-stone-400 hover:text-[#d9778a] cursor-pointer transition-colors p-2 text-center">
-                <CloudUpload className="w-5 h-5 mb-1" />
-                <span className="text-[10px] font-medium leading-tight">Upload Images</span>
+                {isCompressing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-[#d9778a] border-t-transparent rounded-full animate-spin mb-1" />
+                    <span className="text-[10px] font-bold text-[#d9778a]">Optimizing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CloudUpload className="w-5 h-5 mb-1" />
+                    <span className="text-[10px] font-medium leading-tight">Upload Images</span>
+                  </>
+                )}
                 <input
                   type="file"
                   multiple

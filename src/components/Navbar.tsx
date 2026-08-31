@@ -44,44 +44,22 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {!isCustomerPortal && (
-            <>
-              {onOpenDrafts && (
-                <button
-                  onClick={onOpenDrafts}
-                  className={`relative px-2.5 py-1 text-xs rounded-full font-medium transition-all flex items-center gap-1 ${
-                    hasDrafts
-                      ? "bg-amber-100 text-amber-800 border border-amber-300 animate-pulse"
-                      : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                  }`}
-                  title="View saved drafts"
-                >
-                  <FileEdit className="w-3.5 h-3.5" />
-                  <span>Draft</span>
-                  {hasDrafts && (
-                    <span className="w-2 h-2 rounded-full bg-amber-500 absolute -top-0.5 -right-0.5" />
-                  )}
-                </button>
+          {!isCustomerPortal && onOpenDrafts && (
+            <button
+              onClick={onOpenDrafts}
+              className={`relative px-2.5 py-1 text-xs rounded-full font-medium transition-all flex items-center gap-1 ${
+                hasDrafts
+                  ? "bg-amber-100 text-amber-800 border border-amber-300 animate-pulse"
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              }`}
+              title="View saved drafts"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>Draft</span>
+              {hasDrafts && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 absolute -top-0.5 -right-0.5" />
               )}
-
-              {onSwitchRole ? (
-                <button
-                  onClick={onSwitchRole}
-                  className="p-1.5 rounded-full text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                  title="Preview Customer View"
-                >
-                  <ArrowRightLeft className="w-4 h-4" />
-                </button>
-              ) : (
-                <Link
-                  href="/c"
-                  className="p-1.5 rounded-full text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                  title="Preview Customer View"
-                >
-                  <ArrowRightLeft className="w-4 h-4" />
-                </Link>
-              )}
-            </>
+            </button>
           )}
         </div>
       </div>
