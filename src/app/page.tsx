@@ -218,15 +218,17 @@ export default function HomePage() {
     );
   }
 
-  // Filter designs
+  // Filter designs safely
   const filteredDesigns = designs.filter((d) => {
     const matchesCategory =
       designCategoryFilter === "all" || d.type === designCategoryFilter;
+    const cleanSearch = (searchQuery || "").trim().toLowerCase();
     const matchesSearch =
-      searchQuery === "" ||
-      d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.modelNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.pattern.toLowerCase().includes(searchQuery.toLowerCase());
+      cleanSearch === "" ||
+      (d.name && d.name.toLowerCase().includes(cleanSearch)) ||
+      (d.modelNumber && d.modelNumber.toLowerCase().includes(cleanSearch)) ||
+      (d.pattern && d.pattern.toLowerCase().includes(cleanSearch)) ||
+      (d.details && d.details.toLowerCase().includes(cleanSearch));
     return matchesCategory && matchesSearch;
   });
 
@@ -511,19 +513,26 @@ export default function HomePage() {
             setDesigns((prev) => {
               const targetId = savedDesign._id || savedDesign.id;
               const idx = prev.findIndex((d) => (d._id || d.id) === targetId);
+              let updated: DesignData[];
               if (idx !== -1) {
-                const updated = [...prev];
+                updated = [...prev];
                 updated[idx] = savedDesign;
-                return updated;
+              } else {
+                updated = [savedDesign, ...prev];
               }
-              return [savedDesign, ...prev];
+              try {
+                localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(updated));
+              } catch (e) {
+                console.warn(e);
+              }
+              return updated;
             });
           }
           // Automatically switch to Design tab so owner immediately sees their newly added design
           handleTabChange("design");
+          fetchData();
           setEditingDesign(null);
           setDesignDraftToRestore(null);
-          fetchData();
           checkDraftsStatus();
         }}
       />
