@@ -71,67 +71,109 @@ export default function HomePage() {
 
   const fetchData = useCallback(async () => {
     let localCachedDesigns: DesignData[] = [];
+    let localCachedOrders: OrderData[] = [];
+    let localCachedCustomers: CustomerData[] = [];
+
     if (typeof window !== "undefined") {
       try {
-        const cached = localStorage.getItem("aruna_saved_designs_cache");
-        if (cached) {
-          const parsed = JSON.parse(cached);
+        const cachedDesigns = localStorage.getItem("aruna_saved_designs_cache");
+        if (cachedDesigns) {
+          const parsed = JSON.parse(cachedDesigns);
           if (Array.isArray(parsed) && parsed.length > 0) {
             localCachedDesigns = parsed;
             setDesigns(parsed);
           }
         }
+
+        const cachedOrders = localStorage.getItem("aruna_saved_orders_cache");
+        if (cachedOrders) {
+          const parsed = JSON.parse(cachedOrders);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localCachedOrders = parsed;
+            setOrders(parsed);
+          }
+        }
+
+        const cachedCustomers = localStorage.getItem("aruna_saved_customers_cache");
+        if (cachedCustomers) {
+          const parsed = JSON.parse(cachedCustomers);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localCachedCustomers = parsed;
+            setCustomers(parsed);
+          }
+        }
       } catch (e) {
-        console.warn(e);
+        console.warn("Local cache hydration notice:", e);
       }
     }
 
-    setLoading(true);
     try {
-      // Seed if necessary
-      await fetch("/api/seed").catch(() => {});
-
       const [resOrders, resDesigns, resCustomers] = await Promise.all([
-        fetch("/api/orders", { cache: "no-store" }),
+        fetch("/api/orders", { cache: "no-store" }).catch(() => null),
         fetch("/api/designs", {
           cache: "no-store",
           headers: {
             "x-client-designs": encodeURIComponent(JSON.stringify(localCachedDesigns.slice(0, 20))),
           },
-        }),
-        fetch("/api/customers", { cache: "no-store" }),
+        }).catch(() => null),
+        fetch("/api/customers", { cache: "no-store" }).catch(() => null),
       ]);
 
-      const dataOrders = await resOrders.json();
-      const dataDesigns = await resDesigns.json();
-      const dataCustomers = await resCustomers.json();
-
-      if (dataOrders.orders) setOrders(dataOrders.orders);
-      
-      // Merge server designs with local cached designs (never allow empty overwrite on Vercel cold starts)
-      if (dataDesigns.designs && Array.isArray(dataDesigns.designs)) {
-        if (dataDesigns.designs.length > 0) {
-          setDesigns(dataDesigns.designs);
-          localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(dataDesigns.designs));
-        } else if (localCachedDesigns.length > 0) {
-          // If server returned empty array (e.g. serverless cold start without cloud DB), keep local designs and re-sync
-          setDesigns(localCachedDesigns);
-          // Sync local designs up to server
-          localCachedDesigns.forEach((d) => {
-            fetch("/api/designs", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(d),
-            }).catch(() => {});
-          });
+      if (resOrders && resOrders.ok) {
+        const dataOrders = await resOrders.json();
+        if (dataOrders.orders && Array.isArray(dataOrders.orders)) {
+          if (dataOrders.orders.length > 0) {
+            setOrders(dataOrders.orders);
+            localStorage.setItem("aruna_saved_orders_cache", JSON.stringify(dataOrders.orders));
+          } else if (localCachedOrders.length > 0) {
+            setOrders(localCachedOrders);
+            // Re-sync local orders to server
+            localCachedOrders.forEach((o) => {
+              fetch("/api/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(o),
+              }).catch(() => {});
+            });
+          }
         }
       }
-      if (dataCustomers.customers) setCustomers(dataCustomers.customers);
+
+      if (resDesigns && resDesigns.ok) {
+        const dataDesigns = await resDesigns.json();
+        if (dataDesigns.designs && Array.isArray(dataDesigns.designs)) {
+          if (dataDesigns.designs.length > 0) {
+            setDesigns(dataDesigns.designs);
+            localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(dataDesigns.designs));
+          } else if (localCachedDesigns.length > 0) {
+            setDesigns(localCachedDesigns);
+            localCachedDesigns.forEach((d) => {
+              fetch("/api/designs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(d),
+              }).catch(() => {});
+            });
+          }
+        }
+      }
+
+      if (resCustomers && resCustomers.ok) {
+        const dataCustomers = await resCustomers.json();
+        if (dataCustomers.customers && Array.isArray(dataCustomers.customers)) {
+          if (dataCustomers.customers.length > 0) {
+            setCustomers(dataCustomers.customers);
+            localStorage.setItem("aruna_saved_customers_cache", JSON.stringify(dataCustomers.customers));
+          } else if (localCachedCustomers.length > 0) {
+            setCustomers(localCachedCustomers);
+          }
+        }
+      }
     } catch (e) {
       console.error("Fetch data error:", e);
-      if (localCachedDesigns.length > 0) {
-        setDesigns(localCachedDesigns);
-      }
+      if (localCachedDesigns.length > 0) setDesigns(localCachedDesigns);
+      if (localCachedOrders.length > 0) setOrders(localCachedOrders);
+      if (localCachedCustomers.length > 0) setCustomers(localCachedCustomers);
     } finally {
       setLoading(false);
       checkDraftsStatus();
