@@ -49,6 +49,15 @@ export const InstallPwaPrompt: React.FC = () => {
   }, []);
 
   const handleInstallClick = async () => {
+    // If installing from customer portal, mark as customer-mode app
+    if (typeof window !== "undefined") {
+      const isCustomerPage = window.location.pathname.startsWith("/c");
+      if (isCustomerPage) {
+        localStorage.setItem("aruna_installed_as_customer", "true");
+        localStorage.setItem("aruna_app_mode", "customer");
+      }
+    }
+
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
@@ -56,6 +65,7 @@ export const InstallPwaPrompt: React.FC = () => {
         setDeferredPrompt(null);
       }
     } else if (isIOS) {
+      // For iOS, also mark the mode before showing instructions
       setShowIosInstructions(true);
     } else {
       alert("To install this app on your phone:\n1. Tap your browser menu (⋮)\n2. Tap 'Add to Home screen' or 'Install app'");

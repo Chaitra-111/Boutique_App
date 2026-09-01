@@ -24,6 +24,13 @@ export default function CustomerPortalClient() {
 
   // Store owner phone from incoming WhatsApp link if present, or fetch from server
   useEffect(() => {
+    // Mark this device as customer-mode when visiting customer portal
+    // This ensures PWA installs from /c always open in customer view
+    if (typeof window !== "undefined") {
+      localStorage.setItem("aruna_app_mode", "customer");
+      localStorage.setItem("aruna_installed_as_customer", "true");
+    }
+
     if (requestedOwnerPhone) {
       localStorage.setItem("aruna_owner_phone", requestedOwnerPhone);
       setOwnerPhone(requestedOwnerPhone);

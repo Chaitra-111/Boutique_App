@@ -53,6 +53,27 @@ export default function HomePage() {
     localStorage.setItem("aruna_active_tab", tab);
   };
 
+  // Check if this app was installed as customer-mode (from shared link)
+  // If so, redirect to customer portal automatically
+  const [isCustomerDevice, setIsCustomerDevice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const installedAsCustomer = localStorage.getItem("aruna_installed_as_customer");
+      const appMode = localStorage.getItem("aruna_app_mode");
+      if (installedAsCustomer === "true" || appMode === "customer") {
+        // Check if there's an existing admin session — don't redirect if owner is logged in
+        const existingAdminName = localStorage.getItem("aruna_user_name");
+        const existingAdminRole = localStorage.getItem("aruna_role");
+        if (!existingAdminName || existingAdminRole !== "admin") {
+          setIsCustomerDevice(true);
+          window.location.href = "/c";
+          return;
+        }
+      }
+    }
+  }, []);
+
   // Check login on client
   useEffect(() => {
     const savedName = localStorage.getItem("aruna_user_name");
@@ -255,10 +276,54 @@ export default function HomePage() {
   };
 
   if (!user) {
+    // If this device is in customer mode, show a clear message
+    if (isCustomerDevice) {
+      return (
+        <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-center items-center p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl border border-rose-100/90 shadow-xl overflow-hidden p-6 space-y-5 text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100/80 text-[#d9778a] flex items-center justify-center shadow-inner">
+              <Scissors className="w-7 h-7" />
+            </div>
+            <h2 className="text-lg font-extrabold text-stone-800">Owner Access Only</h2>
+            <p className="text-xs text-stone-600 leading-relaxed">
+              🔐 This login page is only for <strong>Aruna Creations boutique owners</strong>.
+              <br /><br />
+              As a customer, please use the <strong>Customer Portal</strong> to browse our exclusive bridal &amp; designer collection, view designs, and contact us.
+            </p>
+            <div className="pt-2 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => { window.location.href = "/c"; }}
+                className="w-full py-2.5 rounded-xl bg-[#d9778a] text-white text-xs font-bold shadow-md shadow-rose-200 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                Open Customer Portal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Allow owner override: clear customer mode flag
+                  localStorage.removeItem("aruna_installed_as_customer");
+                  localStorage.removeItem("aruna_app_mode");
+                  setIsCustomerDevice(false);
+                }}
+                className="w-full py-2 rounded-xl bg-stone-100 text-stone-600 text-[11px] font-medium hover:bg-stone-200 transition-colors"
+              >
+                I am the Boutique Owner — Login as Admin
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <LoginView
         role="admin"
         onLoginSuccess={(u) => {
+          // When owner logs in, clear any customer mode flags
+          localStorage.removeItem("aruna_installed_as_customer");
+          localStorage.removeItem("aruna_app_mode");
           setUser(u);
         }}
       />
