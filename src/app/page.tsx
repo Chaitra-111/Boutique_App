@@ -38,6 +38,19 @@ export default function HomePage() {
   const [designCategoryFilter, setDesignCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Restore saved active tab on load
+  useEffect(() => {
+    const savedTab = localStorage.getItem("aruna_active_tab") as "home" | "design" | "customer";
+    if (savedTab && ["home", "design", "customer"].includes(savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  const handleTabChange = (tab: "home" | "design" | "customer") => {
+    setActiveTab(tab);
+    localStorage.setItem("aruna_active_tab", tab);
+  };
+
   // Check login on client
   useEffect(() => {
     const savedName = localStorage.getItem("aruna_user_name");
@@ -160,7 +173,7 @@ export default function HomePage() {
       {/* Navbar with brand, draft icon, and tabs */}
       <Navbar
         activeTab={activeTab}
-        onTabChange={(t) => setActiveTab(t)}
+        onTabChange={handleTabChange}
         hasDrafts={hasDrafts}
         onOpenDrafts={() => setIsDraftsOpen(true)}
         userRole="admin"
@@ -430,7 +443,7 @@ export default function HomePage() {
             });
           }
           // Automatically switch to Design tab so owner immediately sees their newly added design
-          setActiveTab("design");
+          handleTabChange("design");
           setEditingDesign(null);
           setDesignDraftToRestore(null);
           fetchData();
