@@ -33,21 +33,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, modelNumber, type, customType, pattern, details, price, images } = body;
 
-    if (!name || !modelNumber) {
-      return NextResponse.json({ error: "Name and Model Number are required" }, { status: 400 });
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: "Design Name is required" }, { status: 400 });
     }
 
-    const cleanModel = modelNumber.trim().toUpperCase();
+    // Auto-generate clean model number if not provided by user
+    const prefix = type === "stitching" ? "AC-ST" : type === "other" ? "AC-DS" : "AC-EMB";
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    const cleanModel = modelNumber && modelNumber.trim()
+      ? modelNumber.trim().toUpperCase()
+      : `${prefix}-${Date.now().toString().slice(-4)}${randomSuffix}`;
 
     try {
       await connectDB();
-      const existing = await Design.findOne({ modelNumber: cleanModel });
-      if (existing) {
-        return NextResponse.json(
-          { error: `Design with Model Number "${cleanModel}" already exists. Please use a unique model number.` },
-          { status: 400 }
-        );
-      }
 
       const newDesign = await Design.create({
         name: name.trim(),
@@ -64,14 +62,6 @@ export async function POST(request: Request) {
     } catch (mongoErr: unknown) {
       const err = mongoErr as Error;
       console.warn("MongoDB offline, saving to memory fallback:", err.message);
-
-      // Check memory duplicate
-      if (memoryDB.designs.some((d) => d.modelNumber.toUpperCase() === cleanModel)) {
-        return NextResponse.json(
-          { error: `Design with Model Number "${cleanModel}" already exists. Please use a unique model number.` },
-          { status: 400 }
-        );
-      }
 
       const fallbackDesign = {
         _id: "mem_" + Date.now(),

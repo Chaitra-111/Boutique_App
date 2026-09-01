@@ -476,7 +476,19 @@ export default function HomePage() {
           setOrderDraftToRestore(null);
           checkDraftsStatus();
         }}
-        onSuccess={() => {
+        onSuccess={(newOrd) => {
+          if (newOrd) {
+            setOrders((prev) => {
+              const updated = [newOrd, ...prev.filter((o) => o._id !== newOrd._id)];
+              try {
+                localStorage.setItem("aruna_saved_orders_cache", JSON.stringify(updated));
+              } catch (e) {
+                console.warn(e);
+              }
+              return updated;
+            });
+          }
+          handleTabChange("home");
           fetchData();
           setOrderDraftToRestore(null);
           checkDraftsStatus();

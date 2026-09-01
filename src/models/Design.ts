@@ -16,12 +16,12 @@ export interface IDesign extends Document {
 const DesignSchema = new Schema<IDesign>(
   {
     name: { type: String, required: true },
-    modelNumber: { type: String, required: true, unique: true },
+    modelNumber: { type: String, default: "" },
     type: { type: String, enum: ["embroidery", "stitching", "other"], required: true, default: "embroidery" },
     customType: { type: String },
     pattern: { type: String, default: "" },
     details: { type: String, default: "" },
-    price: { type: Number, required: true, default: 0 },
+    price: { type: Number, default: 0 },
     images: { type: [String], default: [] },
   },
   { timestamps: true }

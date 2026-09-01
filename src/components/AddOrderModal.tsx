@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { DesignData } from "@/types";
+import { DesignData, OrderData } from "@/types";
 import { X, Sparkles, Check, ChevronDown } from "lucide-react";
 
 interface AddOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newOrder?: OrderData) => void;
   designs: DesignData[];
   initialDraftData?: Record<string, unknown> | null;
 }
@@ -172,21 +172,24 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName || !customerPhone || !designModel) {
-      alert("Please fill in Customer Name, Phone Number, and select a Design.");
+    if (!customerName || !customerName.trim() || !customerPhone || !customerPhone.trim()) {
+      alert("Please fill in Customer Name and Phone Number.");
       return;
     }
+
+    const finalDesignModel = designModel || "CUSTOM-ORDER";
+    const finalDesignName = designName || "Custom Tailoring / Stitching";
 
     setLoading(true);
     try {
       const payload = {
-        customerName,
-        customerPhone,
-        customerAddress,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
+        customerAddress: customerAddress ? customerAddress.trim() : "",
         designId: selectedDesignId || undefined,
-        designModel,
-        designName,
-        designType,
+        designModel: finalDesignModel,
+        designName: finalDesignName,
+        designType: designType || "embroidery",
         designImages,
         measurements: {
           bust,
@@ -218,12 +221,17 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
       });
 
       if (!res.ok) throw new Error("Failed to create order");
+      const data = await res.json();
 
       // Clean drafts
       localStorage.removeItem("aruna_draft_order");
       fetch("/api/drafts?type=order", { method: "DELETE" }).catch(() => {});
 
-      onSuccess();
+      if (data.order) {
+        onSuccess(data.order);
+      } else {
+        onSuccess();
+      }
       onClose();
     } catch (err: unknown) {
       const error = err as Error;
