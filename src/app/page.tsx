@@ -612,7 +612,7 @@ export default function HomePage() {
       <RecycleBinModal
         isOpen={isRecycleOpen}
         onClose={() => setIsRecycleOpen(false)}
-        onOrderRestored={() => {
+        onItemRestored={() => {
           fetchData();
         }}
       />

@@ -4,6 +4,7 @@ export interface ICustomer extends Document {
   name: string;
   phone: string;
   address?: string;
+  isDeleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,6 +14,7 @@ const CustomerSchema = new Schema<ICustomer>(
     name: { type: String, required: true },
     phone: { type: String, required: true },
     address: { type: String, default: "" },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

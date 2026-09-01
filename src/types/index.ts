@@ -22,6 +22,8 @@ export interface DesignData {
   details: string;
   price: number;
   images: string[];
+  isDeleted?: boolean;
+  isArchived?: boolean;
   createdAt?: string;
 }
 
@@ -55,6 +57,7 @@ export interface CustomerData {
   name: string;
   phone: string;
   address?: string;
+  isDeleted?: boolean;
   totalOrders: number;
   totalBalance: number;
   totalBilled: number;

@@ -9,6 +9,7 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
+  const view = searchParams.get("view"); // 'recycle' or 'active'
 
   try {
     await connectDB();
@@ -16,14 +17,28 @@ export async function GET(request: Request) {
     if (type && type !== "all") {
       query.type = type;
     }
+
+    if (view === "recycle") {
+      query.$or = [{ isDeleted: true }, { isArchived: true }];
+    } else {
+      query.isDeleted = { $ne: true };
+      query.isArchived = { $ne: true };
+    }
+
     const designs = await Design.find(query).sort({ createdAt: -1 });
     return NextResponse.json({ designs: designs || [] });
   } catch (error: unknown) {
     const err = error as Error;
     console.warn("MongoDB offline, using in-memory store for GET:", err.message);
-    const filtered = type && type !== "all"
-      ? memoryDB.designs.filter((d) => d.type === type)
-      : memoryDB.designs;
+    let filtered = memoryDB.designs;
+    if (type && type !== "all") filtered = filtered.filter((d) => d.type === type);
+
+    if (view === "recycle") {
+      filtered = filtered.filter((d) => d.isDeleted || d.isArchived);
+    } else {
+      filtered = filtered.filter((d) => !d.isDeleted && !d.isArchived);
+    }
+
     return NextResponse.json({ designs: filtered || [] });
   }
 }
@@ -119,6 +134,7 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const permanent = searchParams.get("permanent") === "true";
 
     if (!id) {
       return NextResponse.json({ error: "Design ID required" }, { status: 400 });
@@ -126,13 +142,22 @@ export async function DELETE(request: Request) {
 
     try {
       await connectDB();
-      await Design.findByIdAndDelete(id);
+      if (permanent) {
+        await Design.findByIdAndDelete(id);
+      } else {
+        // Soft delete: move to recycle bin
+        await Design.findByIdAndUpdate(id, { isDeleted: true });
+      }
     } catch (mongoErr: unknown) {
-      console.warn("MongoDB offline, deleting from memory store");
-      memoryDB.designs = memoryDB.designs.filter((d) => d._id !== id && d.id !== id);
+      if (permanent) {
+        memoryDB.designs = memoryDB.designs.filter((d) => d._id !== id && d.id !== id);
+      } else {
+        const idx = memoryDB.designs.findIndex((d) => d._id === id || d.id === id);
+        if (idx !== -1) memoryDB.designs[idx].isDeleted = true;
+      }
     }
 
-    return NextResponse.json({ success: true, message: "Design deleted" });
+    return NextResponse.json({ success: true, message: permanent ? "Design permanently deleted" : "Design moved to Recycle Bin" });
   } catch (error: unknown) {
     const err = error as Error;
     return NextResponse.json({ error: err.message || "Failed to delete design" }, { status: 500 });

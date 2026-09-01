@@ -9,6 +9,8 @@ export interface IDesign extends Document {
   details: string;
   price: number;
   images: string[];
+  isDeleted?: boolean;
+  isArchived?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +25,8 @@ const DesignSchema = new Schema<IDesign>(
     details: { type: String, default: "" },
     price: { type: Number, default: 0 },
     images: { type: [String], default: [] },
+    isDeleted: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

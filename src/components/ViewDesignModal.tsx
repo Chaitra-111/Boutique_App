@@ -232,8 +232,9 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
               </button>
 
               <a
-                href="tel:9876543210"
+                href={`tel:${getOwnerPhone().replace(/\D/g, "")}`}
                 className="py-2.5 px-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1"
+                title="Call Boutique Owner"
               >
                 <Phone className="w-3.5 h-3.5" />
                 <span>Contact</span>
