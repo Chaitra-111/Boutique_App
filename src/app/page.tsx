@@ -10,6 +10,7 @@ import { AddDesignModal } from "@/components/AddDesignModal";
 import { AddExtraAmountModal } from "@/components/AddExtraAmountModal";
 import { ViewDesignModal } from "@/components/ViewDesignModal";
 import { DraftsModal } from "@/components/DraftsModal";
+import { RecycleBinModal } from "@/components/RecycleBinModal";
 import { LoginView } from "@/components/LoginView";
 import { InstallPwaPrompt } from "@/components/InstallPwaPrompt";
 import { OrderData, DesignData, CustomerData } from "@/types";
@@ -32,6 +33,7 @@ export default function HomePage() {
   const [selectedExtraOrder, setSelectedExtraOrder] = useState<OrderData | null>(null);
   const [selectedViewDesign, setSelectedViewDesign] = useState<DesignData | null>(null);
   const [isDraftsOpen, setIsDraftsOpen] = useState(false);
+  const [isRecycleOpen, setIsRecycleOpen] = useState(false);
   const [hasDrafts, setHasDrafts] = useState(false);
 
   // Filters & Search
@@ -191,6 +193,46 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: order._id, status }),
       });
+      // If delivered, remove from active list immediately
+      if (status === "delivered") {
+        setOrders((prev) => {
+          const updated = prev.filter((o) => o._id !== order._id);
+          localStorage.setItem("aruna_saved_orders_cache", JSON.stringify(updated));
+          return updated;
+        });
+      }
+      fetchData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteOrder = async (order: OrderData) => {
+    try {
+      const id = order._id;
+      if (!id) return;
+      await fetch(`/api/orders?id=${id}`, { method: "DELETE" });
+      setOrders((prev) => {
+        const updated = prev.filter((o) => o._id !== id);
+        localStorage.setItem("aruna_saved_orders_cache", JSON.stringify(updated));
+        return updated;
+      });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteCustomer = async (customer: CustomerData) => {
+    try {
+      const id = customer._id;
+      const phone = customer.phone;
+      await fetch(`/api/customers?id=${id || ""}&phone=${phone || ""}`, { method: "DELETE" });
+      setCustomers((prev) => {
+        const updated = prev.filter((c) => c._id !== id && c.phone !== phone);
+        localStorage.setItem("aruna_saved_customers_cache", JSON.stringify(updated));
+        return updated;
+      });
       fetchData();
     } catch (e) {
       console.error(e);
@@ -201,6 +243,11 @@ export default function HomePage() {
     try {
       const id = design._id || design.id;
       await fetch(`/api/designs?id=${id}`, { method: "DELETE" });
+      setDesigns((prev) => {
+        const updated = prev.filter((d) => (d._id || d.id) !== id);
+        localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(updated));
+        return updated;
+      });
       fetchData();
     } catch (e) {
       console.error(e);
@@ -237,12 +284,13 @@ export default function HomePage() {
       {/* Install PWA Prompt */}
       <InstallPwaPrompt />
 
-      {/* Navbar with brand, draft icon, and tabs */}
+      {/* Navbar with brand, draft icon, recycle bin, and tabs */}
       <Navbar
         activeTab={activeTab}
         onTabChange={handleTabChange}
         hasDrafts={hasDrafts}
         onOpenDrafts={() => setIsDraftsOpen(true)}
+        onOpenRecycle={() => setIsRecycleOpen(true)}
         userRole="admin"
         onSwitchRole={() => {
           window.location.href = "/c";
@@ -295,6 +343,7 @@ export default function HomePage() {
                     order={order}
                     onAddExtraAmount={(ord) => setSelectedExtraOrder(ord)}
                     onUpdateStatus={handleUpdateOrderStatus}
+                    onDeleteOrder={handleDeleteOrder}
                   />
                 ))}
               </div>
@@ -431,7 +480,11 @@ export default function HomePage() {
                     );
                   })
                   .map((cust, idx) => (
-                    <CustomerCard key={cust._id || idx} customer={cust} />
+                    <CustomerCard
+                      key={cust._id || idx}
+                      customer={cust}
+                      onDeleteCustomer={handleDeleteCustomer}
+                    />
                   ))}
               </div>
             )}
@@ -556,6 +609,14 @@ export default function HomePage() {
         }}
       />
 
+      <RecycleBinModal
+        isOpen={isRecycleOpen}
+        onClose={() => setIsRecycleOpen(false)}
+        onOrderRestored={() => {
+          fetchData();
+        }}
+      />
+
       <DraftsModal
         isOpen={isDraftsOpen}
         onClose={() => {
@@ -567,7 +628,6 @@ export default function HomePage() {
           setIsAddOrderOpen(true);
         }}
         onRestoreDesignDraft={(data) => {
-          setEditingDesign(null);
           setDesignDraftToRestore(data);
           setIsAddDesignOpen(true);
         }}

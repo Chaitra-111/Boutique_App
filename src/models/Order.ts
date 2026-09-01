@@ -29,6 +29,8 @@ export interface IOrder extends Document {
   paidAmount: number;
   balanceAmount: number;
   status: "pending" | "in_progress" | "completed" | "delivered";
+  isDeleted?: boolean;
+  isArchived?: boolean;
   deliveryDate?: string;
   notes?: string;
   orderPhotos: string[];
@@ -68,6 +70,8 @@ const OrderSchema = new Schema<IOrder>(
       enum: ["pending", "in_progress", "completed", "delivered"],
       default: "pending",
     },
+    isDeleted: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     deliveryDate: { type: String, default: "" },
     notes: { type: String, default: "" },
     orderPhotos: { type: [String], default: [] },

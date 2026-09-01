@@ -2,18 +2,20 @@
 
 import React, { useState } from "react";
 import { OrderData } from "@/types";
-import { Phone, MapPin, Sparkles, ChevronDown, ChevronUp, PlusCircle, CheckCircle2, Clock, Truck, MessageCircle } from "lucide-react";
+import { Phone, MapPin, Sparkles, ChevronDown, ChevronUp, PlusCircle, CheckCircle2, Clock, Truck, MessageCircle, Trash2 } from "lucide-react";
 
 interface OrderCardProps {
   order: OrderData;
   onAddExtraAmount: (order: OrderData) => void;
   onUpdateStatus?: (order: OrderData, status: OrderData["status"]) => void;
+  onDeleteOrder?: (order: OrderData) => void;
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onAddExtraAmount,
   onUpdateStatus,
+  onDeleteOrder,
 }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -62,7 +64,24 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             <span>{order.customerPhone}</span>
           </a>
         </div>
-        <div>{getStatusBadge(order.status)}</div>
+        <div className="flex items-center gap-1.5">
+          {getStatusBadge(order.status)}
+          {onDeleteOrder && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Move order for ${order.customerName} to Recycle Bin?`)) {
+                  onDeleteOrder(order);
+                }
+              }}
+              className="p-1 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              title="Delete Order (Move to Recycle Bin)"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Address */}

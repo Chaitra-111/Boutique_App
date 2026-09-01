@@ -42,6 +42,8 @@ export interface OrderData {
   paidAmount: number;
   balanceAmount: number;
   status: "pending" | "in_progress" | "completed" | "delivered";
+  isDeleted?: boolean;
+  isArchived?: boolean;
   deliveryDate?: string;
   notes?: string;
   orderPhotos?: string[];

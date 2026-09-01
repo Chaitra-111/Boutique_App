@@ -10,6 +10,7 @@ interface NavbarProps {
   onTabChange?: (tab: "home" | "design" | "customer") => void;
   hasDrafts?: boolean;
   onOpenDrafts?: () => void;
+  onOpenRecycle?: () => void;
   userRole?: "admin" | "customer";
   onSwitchRole?: () => void;
 }
@@ -19,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTabChange,
   hasDrafts = false,
   onOpenDrafts,
+  onOpenRecycle,
   userRole = "admin",
   onSwitchRole,
 }) => {
@@ -43,11 +45,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {!isCustomerPortal && onOpenRecycle && (
+            <button
+              onClick={onOpenRecycle}
+              className="px-2 py-1 text-xs rounded-full font-medium transition-all flex items-center gap-1 bg-stone-100 text-stone-600 hover:bg-stone-200"
+              title="Recycle & Delivered History"
+            >
+              <span>♻️</span>
+              <span>Recycle</span>
+            </button>
+          )}
+
           {!isCustomerPortal && onOpenDrafts && (
             <button
               onClick={onOpenDrafts}
-              className={`relative px-2.5 py-1 text-xs rounded-full font-medium transition-all flex items-center gap-1 ${
+              className={`relative px-2 py-1 text-xs rounded-full font-medium transition-all flex items-center gap-1 ${
                 hasDrafts
                   ? "bg-amber-100 text-amber-800 border border-amber-300 animate-pulse"
                   : "bg-stone-100 text-stone-600 hover:bg-stone-200"

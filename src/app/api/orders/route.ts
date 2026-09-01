@@ -12,21 +12,39 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const phone = searchParams.get("phone");
   const status = searchParams.get("status");
+  const view = searchParams.get("view"); // 'recycle' or 'active' (default)
 
   try {
     await connectDB();
     const query: Record<string, unknown> = {};
     if (phone) query.customerPhone = phone;
-    if (status && status !== "all") query.status = status;
 
-    const orders = await Order.find(query).sort({ createdAt: -1 });
+    if (view === "recycle") {
+      // Recycle shows delivered OR deleted orders
+      query.$or = [{ status: "delivered" }, { isDeleted: true }, { isArchived: true }];
+    } else {
+      // Default active view shows non-deleted, non-delivered orders
+      query.isDeleted = { $ne: true };
+      query.isArchived = { $ne: true };
+      query.status = { $ne: "delivered" };
+      if (status && status !== "all") query.status = status;
+    }
+
+    const orders = await Order.find(query).sort({ updatedAt: -1, createdAt: -1 });
     return NextResponse.json({ orders: orders || [] });
   } catch (error: unknown) {
     const err = error as Error;
     console.warn("MongoDB offline, using in-memory store for orders:", err.message);
     let filtered = memoryDB.orders;
     if (phone) filtered = filtered.filter((o) => o.customerPhone === phone);
-    if (status && status !== "all") filtered = filtered.filter((o) => o.status === status);
+
+    if (view === "recycle") {
+      filtered = filtered.filter((o) => o.status === "delivered" || o.isDeleted || o.isArchived);
+    } else {
+      filtered = filtered.filter((o) => !o.isDeleted && !o.isArchived && o.status !== "delivered");
+      if (status && status !== "all") filtered = filtered.filter((o) => o.status === status);
+    }
+
     return NextResponse.json({ orders: filtered || [] });
   }
 }
@@ -219,16 +237,28 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const permanent = searchParams.get("permanent") === "true";
+
     if (!id) return NextResponse.json({ error: "Order ID required" }, { status: 400 });
 
     try {
       await connectDB();
-      await Order.findByIdAndDelete(id);
+      if (permanent) {
+        await Order.findByIdAndDelete(id);
+      } else {
+        // Soft delete: move to recycle bin
+        await Order.findByIdAndUpdate(id, { isDeleted: true });
+      }
     } catch (mongoErr: unknown) {
-      memoryDB.orders = memoryDB.orders.filter((o) => o._id !== id);
+      if (permanent) {
+        memoryDB.orders = memoryDB.orders.filter((o) => o._id !== id);
+      } else {
+        const idx = memoryDB.orders.findIndex((o) => o._id === id);
+        if (idx !== -1) memoryDB.orders[idx].isDeleted = true;
+      }
     }
 
-    return NextResponse.json({ success: true, message: "Order deleted successfully" });
+    return NextResponse.json({ success: true, message: permanent ? "Order permanently deleted" : "Order moved to Recycle Bin" });
   } catch (error: unknown) {
     const err = error as Error;
     return NextResponse.json({ error: err.message || "Failed to delete order" }, { status: 500 });

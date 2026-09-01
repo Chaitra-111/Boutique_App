@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { CustomerData } from "@/types";
-import { Phone, MapPin, ShoppingBag, AlertCircle, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, MapPin, ShoppingBag, AlertCircle, MessageCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 
 interface CustomerCardProps {
   customer: CustomerData;
+  onDeleteCustomer?: (customer: CustomerData) => void;
 }
 
-export const CustomerCard: React.FC<CustomerCardProps> = ({ customer }) => {
+export const CustomerCard: React.FC<CustomerCardProps> = ({ customer, onDeleteCustomer }) => {
   const [expanded, setExpanded] = useState(false);
 
   const handleWhatsAppCustomer = () => {
@@ -53,6 +54,22 @@ export const CustomerCard: React.FC<CustomerCardProps> = ({ customer }) => {
             <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
             <span className="hidden sm:inline">WhatsApp</span>
           </button>
+
+          {onDeleteCustomer && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Delete customer ${customer.name}?`)) {
+                  onDeleteCustomer(customer);
+                }
+              }}
+              className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center gap-1 text-xs font-semibold"
+              title={`Delete ${customer.name}`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

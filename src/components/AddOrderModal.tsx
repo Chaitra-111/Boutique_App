@@ -120,6 +120,14 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
   // Handle design dropdown select
   const handleSelectDesign = (id: string) => {
     setSelectedDesignId(id);
+    if (id === "other") {
+      setDesignModel("");
+      setDesignName("");
+      setDesignType("embroidery");
+      setDesignImages([]);
+      return;
+    }
+
     const found = designs.find((d) => (d._id || d.id) === id);
     if (found) {
       setDesignModel(found.modelNumber);
@@ -129,6 +137,9 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
       if (!baseCost || Number(baseCost) === 0) {
         setBaseCost(String(found.price || 0));
       }
+    } else {
+      setDesignModel("");
+      setDesignName("");
     }
   };
 
@@ -374,7 +385,7 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
               <h3 className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                 ✨ Design Selection
               </h3>
-              <span className="text-[10px] text-stone-400">Dropdown from catalog</span>
+              <span className="text-[10px] text-stone-400">Choose catalog or custom</span>
             </div>
 
             <div className="relative">
@@ -383,18 +394,82 @@ export const AddOrderModal: React.FC<AddOrderModalProps> = ({
                 onChange={(e) => handleSelectDesign(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-white focus:outline-hidden focus:border-[#d9778a] appearance-none font-medium"
               >
-                <option value="">-- Choose Design Model from Designs page --</option>
+                <option value="">-- Choose Design from Catalog --</option>
                 {designs.map((d) => (
                   <option key={d._id || d.id} value={d._id || d.id}>
                     {d.modelNumber} - {d.name} ({d.type}) [Est: ₹{d.price}]
                   </option>
                 ))}
+                <option value="other">➕ Other / Custom New Design (Enter Details Below)</option>
               </select>
               <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
 
-            {/* Selected design preview */}
-            {designModel && (
+            {/* If Other is selected: Show fields for Custom Design Name & Model Number */}
+            {selectedDesignId === "other" && (
+              <div className="p-3 rounded-xl bg-rose-50/40 border border-rose-200/80 space-y-2 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#d9778a] flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Custom / New Design Details (Optional)</span>
+                  </span>
+                  <span className="text-[10px] text-stone-400">Auto-filled if left blank</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-stone-600 mb-0.5">
+                      Model / Design # <span className="text-stone-400">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={designModel === "CUSTOM-ORDER" ? "" : designModel}
+                      onChange={(e) => setDesignModel(e.target.value)}
+                      placeholder="e.g. AC-CUST-101"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-stone-200 bg-white focus:outline-hidden focus:border-[#d9778a] uppercase font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-stone-600 mb-0.5">
+                      Design Name <span className="text-stone-400">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={designName === "Custom Tailoring / Stitching" ? "" : designName}
+                      onChange={(e) => setDesignName(e.target.value)}
+                      placeholder="e.g. Silk Saree Blouse"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-stone-200 bg-white focus:outline-hidden focus:border-[#d9778a]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-stone-600 mb-0.5">
+                    Design Type
+                  </label>
+                  <div className="flex gap-1.5">
+                    {(["embroidery", "stitching", "other"] as const).map((t) => (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => setDesignType(t)}
+                        className={`flex-1 py-1 text-[11px] font-medium rounded-lg capitalize border transition-all ${
+                          designType === t
+                            ? "bg-[#d9778a] text-white border-[#d9778a]"
+                            : "bg-white text-stone-600 border-stone-200 hover:bg-rose-50"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Selected catalog design preview */}
+            {selectedDesignId && selectedDesignId !== "other" && designModel && (
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-rose-100">
                 {designImages && designImages[0] ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
