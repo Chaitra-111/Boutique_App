@@ -70,13 +70,14 @@ export default function HomePage() {
   }, []);
 
   const fetchData = useCallback(async () => {
-    // 1. Immediately hydrate from local cache so screen never blinks or shows empty state
+    let localCachedDesigns: DesignData[] = [];
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem("aruna_saved_designs_cache");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
+            localCachedDesigns = parsed;
             setDesigns(parsed);
           }
         }
@@ -92,7 +93,12 @@ export default function HomePage() {
 
       const [resOrders, resDesigns, resCustomers] = await Promise.all([
         fetch("/api/orders", { cache: "no-store" }),
-        fetch("/api/designs", { cache: "no-store" }),
+        fetch("/api/designs", {
+          cache: "no-store",
+          headers: {
+            "x-client-designs": encodeURIComponent(JSON.stringify(localCachedDesigns.slice(0, 20))),
+          },
+        }),
         fetch("/api/customers", { cache: "no-store" }),
       ]);
 
@@ -101,14 +107,31 @@ export default function HomePage() {
       const dataCustomers = await resCustomers.json();
 
       if (dataOrders.orders) setOrders(dataOrders.orders);
+      
+      // Merge server designs with local cached designs (never allow empty overwrite on Vercel cold starts)
       if (dataDesigns.designs && Array.isArray(dataDesigns.designs)) {
-        setDesigns(dataDesigns.designs);
-        // Persist designs cache in local storage
-        localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(dataDesigns.designs));
+        if (dataDesigns.designs.length > 0) {
+          setDesigns(dataDesigns.designs);
+          localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(dataDesigns.designs));
+        } else if (localCachedDesigns.length > 0) {
+          // If server returned empty array (e.g. serverless cold start without cloud DB), keep local designs and re-sync
+          setDesigns(localCachedDesigns);
+          // Sync local designs up to server
+          localCachedDesigns.forEach((d) => {
+            fetch("/api/designs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(d),
+            }).catch(() => {});
+          });
+        }
       }
       if (dataCustomers.customers) setCustomers(dataCustomers.customers);
     } catch (e) {
       console.error("Fetch data error:", e);
+      if (localCachedDesigns.length > 0) {
+        setDesigns(localCachedDesigns);
+      }
     } finally {
       setLoading(false);
       checkDraftsStatus();

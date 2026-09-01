@@ -56,13 +56,14 @@ export default function CustomerPortalClient() {
 
   // Fetch designs
   useEffect(() => {
-    // 1. Instant hydration from cached designs
+    let localCachedDesigns: DesignData[] = [];
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem("aruna_saved_designs_cache");
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
+            localCachedDesigns = parsed;
             setDesigns(parsed);
           }
         }
@@ -76,12 +77,17 @@ export default function CustomerPortalClient() {
         const res = await fetch("/api/designs", { cache: "no-store" });
         const data = await res.json();
         if (data.designs && Array.isArray(data.designs)) {
-          setDesigns(data.designs);
-          localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(data.designs));
+          if (data.designs.length > 0) {
+            setDesigns(data.designs);
+            localStorage.setItem("aruna_saved_designs_cache", JSON.stringify(data.designs));
+          } else if (localCachedDesigns.length > 0) {
+            setDesigns(localCachedDesigns);
+          }
 
           // If URL contains ?design=AC-EMB-101, open it immediately
           if (requestedDesignModel) {
-            const found = data.designs.find(
+            const listToSearch = data.designs.length > 0 ? data.designs : localCachedDesigns;
+            const found = listToSearch.find(
               (d: DesignData) =>
                 d.modelNumber.toLowerCase() === requestedDesignModel.toLowerCase()
             );
@@ -92,6 +98,9 @@ export default function CustomerPortalClient() {
         }
       } catch (e) {
         console.error(e);
+        if (localCachedDesigns.length > 0) {
+          setDesigns(localCachedDesigns);
+        }
       }
     };
     fetchDesigns();
