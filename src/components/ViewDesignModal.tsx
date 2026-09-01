@@ -42,16 +42,13 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
 
   const handleWhatsAppShare = () => {
     const customerLink = getShareLink();
-    const ownerPhoneDigits = getOwnerPhone().replace(/\D/g, "");
 
     const message = isAdmin
       ? `✨ *Hello from Aruna Creations!* ✨\n\nHere are the details for our exclusive boutique design:\n👗 *Design Name:* ${design.name}\n🔖 *Model Number:* ${design.modelNumber}\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Designer Tailored Pattern"}\n📝 *Details:* ${design.details || "Custom high-quality handcrafting"}\n\n🌟 *These are our designs!* For more designs, full photos & customization, check our boutique catalog link below:\n👉 ${customerLink}\n\n_(Please wait a few moments if the website is loading)_\n\nFeel free to share this with your friends & family or reply to place your order! ✨`
-      : `✨ *Hello Aruna Creations!* ✨\n\nI am viewing your design on the catalog (*Model:* ${design.modelNumber} - ${design.name}) and want to know price, fabric details, and stitching options! 👗\n\n👉 *Design Link:* ${customerLink}\n\n_(Please wait a few moments if the website is loading)_`;
+      : `✨ *Check out this beautiful design from Aruna Creations!* ✨\n\n👗 *Design:* ${design.name} (Model: ${design.modelNumber})\n🧵 *Type:* ${design.type.toUpperCase()}${design.customType ? ` (${design.customType})` : ""}\n🎨 *Pattern:* ${design.pattern || "Designer Pattern"}\n\n🌟 View full photos and explore more boutique collections on the link below:\n👉 ${customerLink}\n\n_(Please wait a few moments if the website is loading)_\n\nShare with friends & family looking for bridal and designer boutique outfits! 💕`;
 
-    const url = isAdmin
-      ? `https://wa.me/?text=${encodeURIComponent(message)}`
-      : `https://wa.me/91${ownerPhoneDigits}?text=${encodeURIComponent(message)}`;
-
+    // Opens WhatsApp share picker without locking to a single phone number so customer can share with anyone
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
 
@@ -227,10 +224,11 @@ export const ViewDesignModal: React.FC<ViewDesignModalProps> = ({
               <button
                 type="button"
                 onClick={handleWhatsAppShare}
-                className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1"
+                className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                title="Share this design with friends & family on WhatsApp"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share Design</span>
               </button>
 
               <a
