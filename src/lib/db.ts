@@ -19,22 +19,27 @@ if (!cached) {
 }
 
 export async function connectDB() {
-  if (cached!.conn) {
+  if (cached!.conn && mongoose.connection.readyState === 1) {
     return cached!.conn;
   }
 
   if (!cached!.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 2000,
+      connectTimeoutMS: 2000,
     };
 
-    cached!.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
-      return mongooseInstance;
-    }).catch((err) => {
-      console.warn("MongoDB connection warning (falling back to graceful handling):", err.message);
-      throw err;
-    });
+    cached!.promise = mongoose
+      .connect(MONGODB_URI, opts)
+      .then((mongooseInstance) => {
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        console.warn("MongoDB connection warning:", err.message);
+        cached!.promise = null;
+        throw err;
+      });
   }
 
   try {
